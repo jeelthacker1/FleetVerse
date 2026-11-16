@@ -144,3 +144,22 @@ def test_twenty_robots_stress_safety_and_progress():
             assert abs(r['pos'][0] - before[r['id']][0]) + abs(r['pos'][1] - before[r['id']][1]) <= 1
     assert metrics(s)['completed'] >= 10
     print(f'BENCHMARK 20 robots / 100 orders / 300 ticks: {time.perf_counter()-start:.3f}s, {metrics(s)}')
+
+
+def test_checkpoints_reset_and_invalid_deadline():
+    layout = layouts()[0]
+    layout['checkpoints'] = [[10, 1], [14, 1]]
+    s = new_state(layout, fleet=1)
+    o = order(s)
+    command(s, 'start', {})
+    for _ in range(200):
+        step(s)
+    assert o['status'] == 'COMPLETED'
+    assert o['checkpoint'] == 2
+    assert len([e for e in s['events'] if e['kind'] == 'checkpoint']) == 2
+    old_tick, old_id = s['tick'], o['id']
+    command(s, 'reset', {})
+    assert s['tick'] == old_tick and metrics(s)['throughput'] == 0
+    assert order(s)['id'] != old_id
+    with pytest.raises(ValueError):
+        order(s, deadline='tomorrow')

@@ -11,3 +11,11 @@
 Acceptance: login → seeded warehouse → moving robots → completed order → blocked route → recorded incident → replay → experiment → export. Two clients share worker state. No simulated results are presented as real-world measurements.
 
 Progress and exact verification results are recorded in docs/VALIDATION.md. Optional 3D and LLM summarization are deferred by design.
+
+## Delivery status
+
+- Foundation, deterministic engine, operations UI, recorded history and experiment workflow implemented.
+- Backend tests, frontend production build, security-role checks and browser workflow passed.
+- Five-service Compose startup and PostgreSQL/Redis-backed browser workflow passed in Linux CI.
+- Public repository created and visibility verified: https://github.com/jeelthacker1/FleetVerse.
+- Final polish and regression additions are validated by the subsequent CI run; operational and scaling limits are listed in docs/LIMITATIONS.md.

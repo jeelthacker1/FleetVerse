@@ -132,6 +132,8 @@ def order(s, pickup=None, dropoff=None, priority=2, deadline=None, key=None):
         raise ValueError('Select configured pickup and dropoff stations')
     if not 1 <= priority <= 5:
         raise ValueError('Priority must be 1–5')
+    if deadline is not None and (not isinstance(deadline, int) or deadline < s['tick']):
+        raise ValueError('Deadline must be an integer tick at or after the current tick')
     s['order_counter'] += 1
     o = dict(id=f'O{s["order_counter"]:05}', pickup=pickup, dropoff=dropoff, priority=priority,
              deadline=deadline if deadline is not None else s['tick'] + 180, created=s['tick'],
@@ -262,6 +264,9 @@ def step(s):
         if path and path[0] != r['pos']:
             if r['route'] and path != r['route']:
                 s['planning']['replans'] += 1
+                event(s, 'reroute', f'{r["id"]}: A* changed route under current reservations', robot=r['id'],
+                      previous_length=len(r['route']), selected_length=len(path), destination=r['destination'],
+                      reserved_cells=len(cells), blocked_cells=len(grid['blocked']))
             r['route'] = path
             r['pos'] = path.pop(0)
             r['distance'] += 1

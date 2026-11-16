@@ -1,5 +1,7 @@
 # FleetVerse
 
+[![Verification](https://github.com/jeelthacker1/FleetVerse/actions/workflows/ci.yml/badge.svg)](https://github.com/jeelthacker1/FleetVerse/actions/workflows/ci.yml)
+
 **A real-time autonomous warehouse digital twin, fleet intelligence and incident simulation platform.**
 
 FleetVerse is executable software: a Python worker computes robot movement, processes durable commands, persists simulation state and publishes updates. The browser renders that state. All activity and performance numbers are explicitly **simulated**, never real warehouse telemetry.
