@@ -1,0 +1,61 @@
+import { test, expect } from '@playwright/test';
+
+test('complete warehouse operations, history and comparison workflow', async ({page, browser}) => {
+  await page.goto('/console');
+  await page.getByLabel('Password', {exact:true}).fill('fleetverse-demo');
+  await page.getByRole('button',{name:'Sign in',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Mission control.'})).toBeVisible();
+  await page.getByRole('button',{name:'Warehouse designer',exact:true}).click();
+  await page.getByLabel('New warehouse name').fill('E2E warehouse');
+  await page.getByRole('button',{name:'Create warehouse with this layout'}).click();
+  await expect(page.getByRole('status')).toContainText('Warehouse and layout created');
+  await page.getByRole('button',{name:'Create simulation',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Warehouse live view'})).toBeVisible();
+  await page.getByRole('button',{name:'Create order',exact:true}).click();
+  await expect(page.getByRole('status')).toContainText('order applied');
+  await page.getByRole('button',{name:'Generate 20 orders'}).click();
+  await expect(page.getByRole('status')).toContainText('generate applied');
+  const initial = await page.getByTestId('robot-R01').getAttribute('data-position');
+  await page.getByRole('button',{name:'Start',exact:true}).click();
+  await expect.poll(()=>page.getByTestId('robot-R01').getAttribute('data-position')).not.toBe(initial);
+  await page.getByLabel('Simulation speed').selectOption('8');
+  await expect(page.locator('td .status').filter({hasText:'COMPLETED'}).first()).toBeVisible({timeout:90000});
+  const secondContext=await browser.newContext();
+  const second=await secondContext.newPage();
+  await second.goto('/console');
+  await second.getByLabel('Password',{exact:true}).fill('fleetverse-demo');
+  await second.getByRole('button',{name:'Sign in',exact:true}).click();
+  await expect(second.getByTestId('robot-R01')).toBeVisible();
+  await page.getByRole('button',{name:'Pause',exact:true}).click();
+  await expect(page.getByRole('status')).toContainText('pause applied');
+  await expect.poll(()=>second.getByTestId('robot-R01').getAttribute('data-position')).toBe(await page.getByTestId('robot-R01').getAttribute('data-position'));
+  // Select an empty walkable cell directly through the visible SVG cell group.
+  const occupied = await page.locator('[data-position]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-position')));
+  const empty = [2,3,4,5,6,7,8,9,10].find(x=>!occupied.includes(`${x},1`))!;
+  const map=page.getByRole('img',{name:'Interactive warehouse map'});
+  await map.locator('g.cell-click').nth(26+empty).click();
+  await page.getByRole('button',{name:'Inject event'}).click();
+  await expect(page.getByRole('status')).toContainText('block applied');
+  await page.getByRole('button',{name:'Incident time machine',exact:true}).click();
+  await page.getByLabel('Event filter').selectOption('incident');
+  await expect(page.locator('.event-ledger')).toContainText('block');
+  await page.getByLabel('History tick').fill('0');
+  await expect(page.getByRole('heading',{name:'State comparison'})).toBeVisible();
+  await page.getByRole('button',{name:'What-if laboratory',exact:true}).click();
+  await page.getByRole('button',{name:'Run experiment',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Measured comparison'})).toBeVisible({timeout:120000});
+  const downloadPromise=page.waitForEvent('download');
+  await page.getByRole('link',{name:'Export CSV'}).click();
+  const download=await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/experiment-\d+\.csv/);
+  await secondContext.close();
+});
+
+test('viewer cannot operate simulation',async({page})=>{
+  await page.goto('/console');
+  await page.getByLabel('Username',{exact:true}).fill('viewer');
+  await page.getByLabel('Password',{exact:true}).fill('fleetverse-demo');
+  await page.getByRole('button',{name:'Sign in',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Generate 20 orders'})).toBeDisabled();
+  await expect(page.getByRole('button',{name:'Administration',exact:true})).toHaveCount(0);
+});
