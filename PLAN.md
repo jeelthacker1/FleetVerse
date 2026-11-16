@@ -18,4 +18,4 @@ Progress and exact verification results are recorded in docs/VALIDATION.md. Opti
 - Backend tests, frontend production build, security-role checks and browser workflow passed.
 - Five-service Compose startup and PostgreSQL/Redis-backed browser workflow passed in Linux CI.
 - Public repository created and visibility verified: https://github.com/jeelthacker1/FleetVerse.
-- Final polish and regression additions are validated by the subsequent CI run; operational and scaling limits are listed in docs/LIMITATIONS.md.
+- Final polish and regression additions passed CI: 19 backend tests, three browser tests, lint and production build. Operational and scaling limits are listed in docs/LIMITATIONS.md.
